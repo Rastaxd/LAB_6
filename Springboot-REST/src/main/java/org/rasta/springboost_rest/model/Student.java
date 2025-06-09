@@ -1,61 +1,37 @@
-package org.rasta.springlab4.model;
-
+package com.project.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.util.Set;
 
-
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
+@Builder
 @AllArgsConstructor
-@Entity
-@Table(name="student",
-       indexes = {
-        @Index(name="idx_nazwisko", columnList = "nazwisko", unique = false),
-        @Index(name = "idx_nr_indeksu", columnList = "nr_indeksu", unique = true)
-       }) //Indeksujemy kolumny, które są najczęściej wykorzystywane do wyszukiwania studentów
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Student {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-   
-    @Column(name = "student_id")
+
     private Integer studentId;
 
-    @Column(nullable = false, length = 50)
+    @NotBlank(message = "Pole imię nie może być puste!")
+    @Size(min = 2, max = 50, message = "Imię musi zawierać od {min} do {max} znaków!")
     private String imie;
 
-    @Column(nullable = false, length = 100)
+    @NotBlank(message = "Pole nazwisko nie może być puste!")
+    @Size(min = 2, max = 100, message = "Nazwisko musi zawierać od {min} do {max} znaków!")
     private String nazwisko;
 
-    @Column(nullable = false, length = 20)
+    @NotBlank(message = "Pole numer indeksu nie może być puste!")
+    @Pattern(regexp = "^[0-9]{6}$", message = "Numer indeksu powinien składać się z 6 cyfr!")
     private String nrIndeksu;
 
-    @Column(nullable = false, length = 50)
-    private String email;
-
-    @Column(nullable = false)
-    private Boolean stacjonarny;
-
-    @ManyToMany(mappedBy = "studenci")
-    @JsonIgnoreProperties({"studenci"})
-
+    @JsonIgnoreProperties("studenci")
     private Set<Projekt> projekty;
-
-
-
-    public Student(String imie, String nazwisko, String nrIndeksu, Boolean stacjonarny)
-    {
-        this.imie = imie;
-        this.nazwisko = nazwisko;
-        this.nrIndeksu = nrIndeksu;
-        this.stacjonarny = stacjonarny;
-    }
-
-
-
-
 }

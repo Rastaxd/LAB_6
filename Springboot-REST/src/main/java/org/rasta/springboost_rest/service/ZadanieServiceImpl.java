@@ -1,6 +1,7 @@
 package com.project.service;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,19 +14,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import com.project.exception.HttpException;
-import com.project.model.Projekt;
+import com.project.model.Zadanie;
 
 @Service
-public class ProjektServiceImpl implements ProjektService {
-    private static final Logger logger = LoggerFactory.getLogger(ProjektServiceImpl.class);
+public class ZadanieServiceImpl implements ZadanieService {
+    private static final Logger logger = LoggerFactory.getLogger(ZadanieServiceImpl.class);
     private final RestClient restClient;
 
-    public ProjektServiceImpl(RestClient restClient) {
+    public ZadanieServiceImpl(RestClient restClient) {
         this.restClient = restClient;
     }
 
     private String getResourcePath() {
-        return "/api/projekty";
+        return "/api/zadania";
     }
 
     private String getResourcePath(Integer id) {
@@ -33,36 +34,36 @@ public class ProjektServiceImpl implements ProjektService {
     }
 
     @Override
-    public Optional<Projekt> getProjekt(Integer projektId) {
-        String resourcePath = getResourcePath(projektId);
+    public Optional<Zadanie> getZadanie(Integer zadanieId) {
+        String resourcePath = getResourcePath(zadanieId);
         logger.info("REQUEST -> GET {}", resourcePath);
-        Projekt projekt = restClient
+        Zadanie zadanie = restClient
                 .get()
                 .uri(resourcePath)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, (req, res) -> {
                     throw new HttpException(res.getStatusCode(), res.getHeaders());
                 })
-                .body(Projekt.class);
-        return Optional.ofNullable(projekt);
+                .body(Zadanie.class);
+        return Optional.ofNullable(zadanie);
     }
 
     @Override
-    public Projekt setProjekt(Projekt projekt) {
-        if (projekt.getProjektId() != null) {
-            String resourcePath = getResourcePath(projekt.getProjektId());
+    public Zadanie setZadanie(Zadanie zadanie) {
+        if (zadanie.getZadanieId() != null) {
+            String resourcePath = getResourcePath(zadanie.getZadanieId());
             logger.info("REQUEST -> PUT {}", resourcePath);
             restClient
                     .put()
                     .uri(resourcePath)
                     .accept(MediaType.APPLICATION_JSON)
-                    .body(projekt)
+                    .body(zadanie)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (req, res) -> {
                         throw new HttpException(res.getStatusCode(), res.getHeaders());
                     })
                     .toBodilessEntity();
-            return projekt;
+            return zadanie;
         } else {
             String resourcePath = getResourcePath();
             logger.info("REQUEST -> POST {}", resourcePath);
@@ -70,7 +71,7 @@ public class ProjektServiceImpl implements ProjektService {
                     .post()
                     .uri(resourcePath)
                     .accept(MediaType.APPLICATION_JSON)
-                    .body(projekt)
+                    .body(zadanie)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (req, res) -> {
                         throw new HttpException(res.getStatusCode(), res.getHeaders());
@@ -85,13 +86,13 @@ public class ProjektServiceImpl implements ProjektService {
                     .onStatus(HttpStatusCode::isError, (req, res) -> {
                         throw new HttpException(res.getStatusCode(), res.getHeaders());
                     })
-                    .body(Projekt.class);
+                    .body(Zadanie.class);
         }
     }
 
     @Override
-    public void deleteProjekt(Integer projektId) {
-        String resourcePath = getResourcePath(projektId);
+    public void deleteZadanie(Integer zadanieId) {
+        String resourcePath = getResourcePath(zadanieId);
         logger.info("REQUEST -> DELETE {}", resourcePath);
         restClient
                 .delete()
@@ -104,26 +105,39 @@ public class ProjektServiceImpl implements ProjektService {
     }
 
     @Override
-    public Page<Projekt> getProjekty(Pageable pageable) {
+    public Page<Zadanie> getZadania(Pageable pageable) {
         URI uri = ServiceUtil.getURI(getResourcePath(), pageable);
         logger.info("REQUEST -> GET {}", uri);
         return getPage(uri);
     }
 
     @Override
-    public Page<Projekt> searchByNazwa(String nazwa, Pageable pageable) {
+    public Page<Zadanie> getZadaniaProjektu(Integer projektId, Pageable pageable) {
         URI uri = ServiceUtil
                 .getUriComponent(getResourcePath(), pageable)
-                .queryParam("nazwa", nazwa)
+                .queryParam("projektId", projektId)
                 .build().toUri();
         logger.info("REQUEST -> GET {}", uri);
         return getPage(uri);
     }
 
-    private Page<Projekt> getPage(URI uri) {
+    @Override
+    public List<Zadanie> getZadaniaProjektu(Integer projektId) {
+        URI uri = ServiceUtil
+                .getUriComponent(getResourcePath())
+                .queryParam("projektId", projektId)
+                .build().toUri();
+        logger.info("REQUEST -> GET {}", uri);
         return restClient.get()
                 .uri(uri.toString())
                 .retrieve()
-                .body(new ParameterizedTypeReference<RestResponsePage<Projekt>>(){});
+                .body(new ParameterizedTypeReference<List<Zadanie>>(){});
+    }
+
+    private Page<Zadanie> getPage(URI uri) {
+        return restClient.get()
+                .uri(uri.toString())
+                .retrieve()
+                .body(new ParameterizedTypeReference<RestResponsePage<Zadanie>>(){});
     }
 }

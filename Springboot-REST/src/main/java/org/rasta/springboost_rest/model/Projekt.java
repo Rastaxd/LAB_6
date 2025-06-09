@@ -1,100 +1,47 @@
-package org.rasta.springlab4.model;
-
+package com.project.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
-
-@Getter
-@Setter
-@Entity
-@Table(name="projekt", indexes = {
-        @Index(name = "idx_projekt_nazwa", columnList = "nazwa")
-}) 
-
+@Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Projekt {
 
-
-    public Projekt(Integer projektId, String nazwa, String opis, LocalDate lastModifiedDate) {
-        this.projektId = projektId;
-        this.nazwa = nazwa;
-        this.opis = opis;
-        this.createdDate = LocalDateTime.now();
-        this.lastModifiedDate = lastModifiedDate != null ? lastModifiedDate.atStartOfDay() : null;
-    }
-
-    public Projekt(String nazwa, String opis, LocalDate of) {
-        this.nazwa = nazwa;
-        this.opis = opis;
-        this.createdDate = LocalDateTime.now();
-    }
-    
-    public Projekt(Integer projektId, String nazwa, String opis, LocalDateTime createdDate, LocalDate lastModifiedDate)
-    {
-        this.projektId = projektId;
-        this.nazwa = nazwa;
-        this.opis = opis;
-        this.createdDate = createdDate;
-        this.lastModifiedDate = lastModifiedDate.atStartOfDay();
-    }
-
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="projekt_id")
     private Integer projektId;
 
-
-    @NotBlank(message = "Nazwa projektu nie może być pusta")
-    @Column(nullable = false, length = 50)
+    @NotBlank(message = "Pole nazwa nie może być puste!")
+    @Size(min = 3, max = 50, message = "Nazwa musi zawierać od {min} do {max} znaków!")
     private String nazwa;
 
-    @Column(nullable = false, length = 1000)
+    @NotBlank(message = "Pole opis nie może być puste!")
+    @Size(max = 2000, message = "Opis może zawierać maksymalnie {max} znaków!")
     private String opis;
 
-    @CreatedDate
-    @Column(name="dataczas_utworzenia", nullable = false, updatable = false)
-    private LocalDateTime createdDate;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    private LocalDateTime dataCzasUtworzenia;
 
-    @LastModifiedDate
-    @Column(name="dataczas_modyfikacji", insertable = false)
-    private LocalDateTime lastModifiedDate;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    private LocalDateTime dataCzasModyfikacji;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate dataOddania;
 
-    public Projekt(int i, String nazwa1, String opis1, LocalDate of) {
-        this.projektId = i;
-        this.nazwa = nazwa1;
-        this.opis = opis1;
-        this.lastModifiedDate = of.atStartOfDay();
-    }
-    @OneToMany(mappedBy = "projekt", cascade = CascadeType.ALL)
-    @JsonIgnoreProperties({"projekt"})
-    private List<Zadanie> zadania;
-    
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-            name = "projekt_student",
-            joinColumns = @JoinColumn(name = "projekt_id"),
-            inverseJoinColumns = @JoinColumn(name = "student_id")
-    )
+    @JsonIgnoreProperties("projekt")
+    private Set<Zadanie> zadania;
+
     @JsonIgnoreProperties("projekty")
     private Set<Student> studenci;
-
-
 }

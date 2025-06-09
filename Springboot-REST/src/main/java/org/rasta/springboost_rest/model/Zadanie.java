@@ -1,41 +1,38 @@
-package org.rasta.springlab4.model;
-
+package com.project.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@Entity
-@Table(name="zadanie")
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Zadanie {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="zadanie_id")
+
     private Integer zadanieId;
 
-    @ManyToOne
-    @JoinColumn(name="projekt_id")
-    @JsonIgnoreProperties({"zadania"})
-    private Projekt projekt;
-
-    @Column(nullable = false, length = 50)
+    @NotNull(message = "Pole nazwa nie może być puste!")
+    @Size(min = 3, max = 50, message = "Nazwa musi zawierać od {min} do {max} znaków!")
     private String nazwa;
 
-    @Column(nullable = false)
     private Integer kolejnosc;
 
-    @Column(nullable = false, length = 1000)
+    @NotNull(message = "Pole opis nie może być puste!")
+    @Size(max = 1000, message = "Pole opis może zawierać maksymalnie {max} znaków!")
     private String opis;
 
-    @CreatedDate
-    @Column(name="dataczas_dodania", nullable = false, updatable = false)
-    private LocalDateTime dataczasDodania;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    private LocalDateTime dataCzasDodania;
 
-
+    @JsonIgnoreProperties({ "zadania" })
+    private Projekt projekt;
 }

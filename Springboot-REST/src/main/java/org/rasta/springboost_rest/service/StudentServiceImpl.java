@@ -13,19 +13,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import com.project.exception.HttpException;
-import com.project.model.Projekt;
+import com.project.model.Student;
 
 @Service
-public class ProjektServiceImpl implements ProjektService {
-    private static final Logger logger = LoggerFactory.getLogger(ProjektServiceImpl.class);
+public class StudentServiceImpl implements StudentService {
+    private static final Logger logger = LoggerFactory.getLogger(StudentServiceImpl.class);
     private final RestClient restClient;
 
-    public ProjektServiceImpl(RestClient restClient) {
+    public StudentServiceImpl(RestClient restClient) {
         this.restClient = restClient;
     }
 
     private String getResourcePath() {
-        return "/api/projekty";
+        return "/api/studenci";
     }
 
     private String getResourcePath(Integer id) {
@@ -33,36 +33,54 @@ public class ProjektServiceImpl implements ProjektService {
     }
 
     @Override
-    public Optional<Projekt> getProjekt(Integer projektId) {
-        String resourcePath = getResourcePath(projektId);
+    public Optional<Student> getStudent(Integer studentId) {
+        String resourcePath = getResourcePath(studentId);
         logger.info("REQUEST -> GET {}", resourcePath);
-        Projekt projekt = restClient
+        Student student = restClient
                 .get()
                 .uri(resourcePath)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, (req, res) -> {
                     throw new HttpException(res.getStatusCode(), res.getHeaders());
                 })
-                .body(Projekt.class);
-        return Optional.ofNullable(projekt);
+                .body(Student.class);
+        return Optional.ofNullable(student);
     }
 
     @Override
-    public Projekt setProjekt(Projekt projekt) {
-        if (projekt.getProjektId() != null) {
-            String resourcePath = getResourcePath(projekt.getProjektId());
+    public Optional<Student> getStudentByNrIndeksu(String nrIndeksu) {
+        URI uri = ServiceUtil
+                .getUriComponent(getResourcePath())
+                .queryParam("nrIndeksu", nrIndeksu)
+                .build().toUri();
+        logger.info("REQUEST -> GET {}", uri);
+        Student student = restClient
+                .get()
+                .uri(uri)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, res) -> {
+                    throw new HttpException(res.getStatusCode(), res.getHeaders());
+                })
+                .body(Student.class);
+        return Optional.ofNullable(student);
+    }
+
+    @Override
+    public Student setStudent(Student student) {
+        if (student.getStudentId() != null) {
+            String resourcePath = getResourcePath(student.getStudentId());
             logger.info("REQUEST -> PUT {}", resourcePath);
             restClient
                     .put()
                     .uri(resourcePath)
                     .accept(MediaType.APPLICATION_JSON)
-                    .body(projekt)
+                    .body(student)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (req, res) -> {
                         throw new HttpException(res.getStatusCode(), res.getHeaders());
                     })
                     .toBodilessEntity();
-            return projekt;
+            return student;
         } else {
             String resourcePath = getResourcePath();
             logger.info("REQUEST -> POST {}", resourcePath);
@@ -70,7 +88,7 @@ public class ProjektServiceImpl implements ProjektService {
                     .post()
                     .uri(resourcePath)
                     .accept(MediaType.APPLICATION_JSON)
-                    .body(projekt)
+                    .body(student)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (req, res) -> {
                         throw new HttpException(res.getStatusCode(), res.getHeaders());
@@ -85,13 +103,13 @@ public class ProjektServiceImpl implements ProjektService {
                     .onStatus(HttpStatusCode::isError, (req, res) -> {
                         throw new HttpException(res.getStatusCode(), res.getHeaders());
                     })
-                    .body(Projekt.class);
+                    .body(Student.class);
         }
     }
 
     @Override
-    public void deleteProjekt(Integer projektId) {
-        String resourcePath = getResourcePath(projektId);
+    public void deleteStudent(Integer studentId) {
+        String resourcePath = getResourcePath(studentId);
         logger.info("REQUEST -> DELETE {}", resourcePath);
         restClient
                 .delete()
@@ -104,26 +122,36 @@ public class ProjektServiceImpl implements ProjektService {
     }
 
     @Override
-    public Page<Projekt> getProjekty(Pageable pageable) {
+    public Page<Student> getStudenci(Pageable pageable) {
         URI uri = ServiceUtil.getURI(getResourcePath(), pageable);
         logger.info("REQUEST -> GET {}", uri);
         return getPage(uri);
     }
 
     @Override
-    public Page<Projekt> searchByNazwa(String nazwa, Pageable pageable) {
+    public Page<Student> searchByNrIndeksu(String nrIndeksu, Pageable pageable) {
         URI uri = ServiceUtil
                 .getUriComponent(getResourcePath(), pageable)
-                .queryParam("nazwa", nazwa)
+                .queryParam("nrIndeksu", nrIndeksu)
                 .build().toUri();
         logger.info("REQUEST -> GET {}", uri);
         return getPage(uri);
     }
 
-    private Page<Projekt> getPage(URI uri) {
+    @Override
+    public Page<Student> searchByNazwisko(String nazwisko, Pageable pageable) {
+        URI uri = ServiceUtil
+                .getUriComponent(getResourcePath(), pageable)
+                .queryParam("nazwisko", nazwisko)
+                .build().toUri();
+        logger.info("REQUEST -> GET {}", uri);
+        return getPage(uri);
+    }
+
+    private Page<Student> getPage(URI uri) {
         return restClient.get()
                 .uri(uri.toString())
                 .retrieve()
-                .body(new ParameterizedTypeReference<RestResponsePage<Projekt>>(){});
+                .body(new ParameterizedTypeReference<RestResponsePage<Student>>(){});
     }
 }
